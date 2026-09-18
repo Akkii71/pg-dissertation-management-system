@@ -1,0 +1,16 @@
+[
+  {
+    "id": "DIS001",
+    "studentId": "STU001",
+    "studentName": "Aarav Sharma",
+    "guideId": "GUD001",
+    "guideName": "Dr. Rajesh Varma",
+    "topicTitle": "Clinical Evaluation of Ashwagandha in Stress Management",
+    "department": "Ayurveda Research",
+    "domain": "Psychopharmacology",
+    "description": "Standardized RCT study on adult subjects measuring serum cortisol levels and HAM-A scores.",
+    "status": "Approved",
+    "proposedDate": "2026-09-18",
+    "reviewComments": "Topic aligned with department research thrust area. Approved by Departmental Committee."
+  }
+]

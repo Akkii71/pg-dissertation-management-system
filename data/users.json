@@ -1,0 +1,51 @@
+[
+  {
+    "id": "STU001",
+    "name": "Aarav Sharma",
+    "email": "aarav.pg@university.edu",
+    "role": "student",
+    "department": "Ayurveda Research",
+    "guideId": "GUD001"
+  },
+  {
+    "id": "STU002",
+    "name": "Pooja Patel",
+    "email": "pooja.pg@university.edu",
+    "role": "student",
+    "department": "Herbal Pharmacology",
+    "guideId": "GUD002"
+  },
+  {
+    "id": "STU003",
+    "name": "Rohan Verma",
+    "email": "rohan.pg@university.edu",
+    "role": "student",
+    "department": "Clinical Research",
+    "guideId": null
+  },
+  {
+    "id": "GUD001",
+    "name": "Dr. Rajesh Varma",
+    "email": "dr.rajesh@university.edu",
+    "role": "guide",
+    "department": "Ayurveda Research",
+    "designation": "Associate Professor",
+    "maxStudents": 3
+  },
+  {
+    "id": "GUD002",
+    "name": "Dr. Sunita Rao",
+    "email": "dr.sunita@university.edu",
+    "role": "guide",
+    "department": "Herbal Pharmacology",
+    "designation": "Professor & HOD",
+    "maxStudents": 3
+  },
+  {
+    "id": "ADM001",
+    "name": "Dean of Post-Graduate Studies",
+    "email": "dean.pg@university.edu",
+    "role": "admin",
+    "department": "Academic Affairs"
+  }
+]

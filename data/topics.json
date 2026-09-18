@@ -1,0 +1,42 @@
+[
+  {
+    "id": "TOP001",
+    "title": "Clinical Evaluation of Ashwagandha in Stress Management",
+    "department": "Ayurveda Research",
+    "domain": "Psychopharmacology",
+    "description": "Randomized controlled study investigating the efficacy of Withania somnifera standardized extract.",
+    "status": "Available",
+    "addedBy": "Admin",
+    "createdAt": "2026-09-20"
+  },
+  {
+    "id": "TOP002",
+    "title": "Phytochemical Profiling of Selected Medicinal Plants in Western Ghats",
+    "department": "Herbal Pharmacology",
+    "domain": "Pharmacognosy",
+    "description": "Extraction and chromatographic analysis of active secondary metabolites in indigenous flora.",
+    "status": "Available",
+    "addedBy": "Admin",
+    "createdAt": "2026-09-20"
+  },
+  {
+    "id": "TOP003",
+    "title": "Therapeutic Role of Guduchi in Metabolic Syndrome Regulation",
+    "department": "Clinical Research",
+    "domain": "Endocrinology",
+    "description": "Investigating Tinospora cordifolia extracts in modulating insulin resistance and lipid profiles.",
+    "status": "Available",
+    "addedBy": "Admin",
+    "createdAt": "2026-09-20"
+  },
+  {
+    "id": "TOP004",
+    "title": "Standardization of Polyherbal Formulation for Hepatic Disorders",
+    "department": "Herbal Pharmacology",
+    "domain": "Formulation Development",
+    "description": "Quality control, stability studies and hepatoprotective evaluation of traditional herbal compound.",
+    "status": "Available",
+    "addedBy": "Admin",
+    "createdAt": "2026-09-20"
+  }
+]
