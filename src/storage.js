@@ -6,14 +6,12 @@ const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const TOPICS_FILE = path.join(DATA_DIR, 'topics.json');
 const DISSERTATIONS_FILE = path.join(DATA_DIR, 'dissertations.json');
 
-// Ensure data directory exists
 function ensureDataDir() {
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
   }
 }
 
-// Generic file reader
 function readJson(filePath, defaultValue = []) {
   ensureDataDir();
   try {
@@ -29,7 +27,6 @@ function readJson(filePath, defaultValue = []) {
   }
 }
 
-// Generic file writer
 function writeJson(filePath, data) {
   ensureDataDir();
   try {
@@ -41,7 +38,6 @@ function writeJson(filePath, data) {
   }
 }
 
-// Data Store Accessors
 const Storage = {
   // Users
   getUsers: () => readJson(USERS_FILE),
@@ -63,47 +59,52 @@ const Storage = {
     readJson(DISSERTATIONS_FILE).find((d) => d.studentId === studentId),
   getDissertationById: (id) =>
     readJson(DISSERTATIONS_FILE).find((d) => d.id === id),
-  getPendingDissertations: () =>
-    readJson(DISSERTATIONS_FILE).filter((d) => d.status === 'Pending Review'),
 
-  // Duplicate Check Helper
-  // Checks if a topic title already exists across registered topics or proposed dissertations (case-insensitive)
+  // Pending = topicStatus is Pending (or old "Pending Review" for backward compat)
+  getPendingDissertations: () =>
+    readJson(DISSERTATIONS_FILE).filter(
+      (d) => d.topicStatus === 'Pending' || d.status === 'Pending Review'
+    ),
+
+  // Dissertations assigned to a specific guide
+  getDissertationsByGuideId: (guideId) =>
+    readJson(DISSERTATIONS_FILE).filter((d) => d.guideId === guideId),
+
+  // Count how many students a guide currently has
+  getStudentCountForGuide: (guideId) =>
+    readJson(USERS_FILE).filter(
+      (u) => u.role === 'student' && u.guideId === guideId
+    ).length,
+
+  // Duplicate check — title must not exist in topics or dissertations
   isTopicTitleDuplicate: (title) => {
     if (!title) return false;
     const normalized = title.trim().toLowerCase();
-    
     const topics = readJson(TOPICS_FILE);
-    const hasInTopics = topics.some(
-      (t) => t.title && t.title.trim().toLowerCase() === normalized
-    );
-    if (hasInTopics) return true;
-
+    if (topics.some((t) => t.title && t.title.trim().toLowerCase() === normalized)) return true;
     const dissertations = readJson(DISSERTATIONS_FILE);
-    const hasInDissertations = dissertations.some(
+    return dissertations.some(
       (d) => d.topicTitle && d.topicTitle.trim().toLowerCase() === normalized
     );
-    return hasInDissertations;
   },
 
-  // Generate unique IDs
+  // ID generators
   generateTopicId: () => {
     const topics = readJson(TOPICS_FILE);
-    const maxNum = topics.reduce((max, t) => {
-      const match = t.id && t.id.match(/\d+/);
-      const num = match ? parseInt(match[0], 10) : 0;
-      return num > max ? num : max;
+    const max = topics.reduce((m, t) => {
+      const n = t.id ? parseInt((t.id.match(/\d+/) || ['0'])[0], 10) : 0;
+      return n > m ? n : m;
     }, 0);
-    return `TOP${String(maxNum + 1).padStart(3, '0')}`;
+    return `TOP${String(max + 1).padStart(3, '0')}`;
   },
 
   generateDissertationId: () => {
-    const dissertations = readJson(DISSERTATIONS_FILE);
-    const maxNum = dissertations.reduce((max, d) => {
-      const match = d.id && d.id.match(/\d+/);
-      const num = match ? parseInt(match[0], 10) : 0;
-      return num > max ? num : max;
+    const d = readJson(DISSERTATIONS_FILE);
+    const max = d.reduce((m, x) => {
+      const n = x.id ? parseInt((x.id.match(/\d+/) || ['0'])[0], 10) : 0;
+      return n > m ? n : m;
     }, 0);
-    return `DIS${String(maxNum + 1).padStart(3, '0')}`;
+    return `DIS${String(max + 1).padStart(3, '0')}`;
   }
 };
 

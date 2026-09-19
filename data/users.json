@@ -30,7 +30,7 @@
     "role": "guide",
     "department": "Ayurveda Research",
     "designation": "Associate Professor",
-    "maxStudents": 3
+    "maxStudents": 5
   },
   {
     "id": "GUD002",
@@ -39,7 +39,7 @@
     "role": "guide",
     "department": "Herbal Pharmacology",
     "designation": "Professor & HOD",
-    "maxStudents": 3
+    "maxStudents": 5
   },
   {
     "id": "ADM001",
