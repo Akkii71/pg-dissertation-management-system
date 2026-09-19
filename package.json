@@ -1,0 +1,23 @@
+{
+  "name": "pg-dissertation-management-system",
+  "version": "1.0.0",
+  "description": "PG Dissertation Management System - Academic Research & Dissertation Management Portal",
+  "private": true,
+  "scripts": {
+    "install:all": "npm --prefix backend install && npm --prefix frontend install",
+    "backend": "npm --prefix backend run dev",
+    "frontend": "npm --prefix frontend run dev",
+    "start": "node backend/server.js"
+  },
+  "keywords": [
+    "pg-dissertation",
+    "academic-management",
+    "mern",
+    "react",
+    "nodejs",
+    "express",
+    "mongodb"
+  ],
+  "author": "PG Dissertation Management System",
+  "license": "ISC"
+}
