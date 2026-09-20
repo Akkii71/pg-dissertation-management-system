@@ -4,10 +4,7 @@ const { ask, pause, printHeader, printSubHeader, printDivider } = require('../ut
 // ── Helper: pick a guide ──────────────────────────────────────────────────────
 async function selectGuide() {
   const guides = Storage.getGuides();
-  if (guides.length === 0) {
-    console.log('\n[!] No PG guides registered.');
-    return null;
-  }
+  if (guides.length === 0) { console.log('\n[!] No PG guides registered.'); return null; }
   console.log('\nSelect Guide:');
   printDivider('-', 45);
   guides.forEach((g, i) => console.log(` ${i + 1}. [${g.id}] ${g.name} (${g.department})`));
@@ -37,11 +34,12 @@ async function viewMyStudents() {
       const d = dissertations.find((x) => x.studentId === s.id);
       console.log(`${i + 1}. [${s.id}] ${s.name}`);
       if (d) {
-        console.log(`   Topic      : "${d.topicTitle}"`);
+        console.log(`   Topic       : "${d.topicTitle}"`);
         console.log(`   Topic Status: ${d.topicStatus || d.status || 'Pending'}`);
-        console.log(`   Progress   : ${d.progress !== undefined ? d.progress : 0}%`);
-        console.log(`   Submission : ${d.submissionStatus || 'Not Submitted'}`);
-        console.log(`   Evaluation : ${d.evaluationStatus || 'Pending'}`);
+        console.log(`   Progress    : ${d.progress !== undefined ? d.progress : 0}%`);
+        console.log(`   Submission  : ${d.submissionStatus || 'Not Submitted'}`);
+        console.log(`   Evaluation  : ${d.evaluationStatus || 'Pending'}`);
+        console.log(`   Univ. Result: ${Storage.deriveUniversityResult(d)}`);
       } else {
         console.log('   No dissertation proposed yet.');
       }
@@ -51,13 +49,12 @@ async function viewMyStudents() {
   await pause();
 }
 
-// ── 2. Approve Topic ─────────────────────────────────────────────────────────
+// ── 2. Approve Topic ──────────────────────────────────────────────────────────
 async function approveTopic() {
   printSubHeader('APPROVE DISSERTATION TOPIC');
   const guide = await selectGuide();
   if (!guide) return;
 
-  // Show only pending dissertations assigned to this guide
   const pending = Storage.getPendingDissertations().filter((d) => d.guideId === guide.id);
   if (pending.length === 0) {
     console.log(`No pending topics assigned to ${guide.name}.`);
@@ -85,7 +82,7 @@ async function approveTopic() {
   await pause();
 }
 
-// ── 3. Reject Topic ──────────────────────────────────────────────────────────
+// ── 3. Reject Topic ───────────────────────────────────────────────────────────
 async function rejectTopic() {
   printSubHeader('REJECT DISSERTATION TOPIC');
   const guide = await selectGuide();
@@ -114,8 +111,7 @@ async function rejectTopic() {
     all[di].status = 'Rejected';
     all[di].reviewComments = `Rejected: ${reason}`;
     Storage.saveDissertations(all);
-    console.log(`\n[✗] Topic "${sel.topicTitle}" rejected.`);
-    console.log(`    Reason: ${reason}`);
+    console.log(`\n[✗] Topic "${sel.topicTitle}" rejected. Reason: ${reason}`);
   }
   await pause();
 }
@@ -140,9 +136,11 @@ async function viewStudentProgress() {
     const d = dissertations.find((x) => x.studentId === s.id);
     console.log(`${i + 1}. ${s.name} [${s.id}]`);
     if (d) {
+      const pct = d.progress || 0;
+      const bar = '█'.repeat(Math.round(pct / 10)) + '░'.repeat(10 - Math.round(pct / 10));
       console.log(`   Topic    : "${d.topicTitle}"`);
       console.log(`   Status   : ${d.topicStatus || d.status || '-'}`);
-      console.log(`   Progress : ${'█'.repeat(Math.round((d.progress || 0) / 10))}${'░'.repeat(10 - Math.round((d.progress || 0) / 10))} ${d.progress || 0}%`);
+      console.log(`   Progress : ${bar} ${pct}%`);
       console.log(`   Submitted: ${d.submissionStatus || 'Not Submitted'}`);
     } else {
       console.log('   No dissertation proposed yet.');
@@ -158,9 +156,10 @@ async function evaluateDissertation() {
   const guide = await selectGuide();
   if (!guide) return;
 
-  // Only submitted dissertations assigned to this guide
   const submitted = Storage.getDissertationsByGuideId(guide.id).filter(
-    (d) => d.submissionStatus === 'Submitted' && d.evaluationStatus !== 'Approved' && d.evaluationStatus !== 'Rejected'
+    (d) => d.submissionStatus === 'Submitted' &&
+           d.evaluationStatus !== 'Approved' &&
+           d.evaluationStatus !== 'Rejected'
   );
 
   if (submitted.length === 0) {
@@ -175,7 +174,6 @@ async function evaluateDissertation() {
   if (n < 1 || n > submitted.length) return;
 
   const sel = submitted[n - 1];
-
   const marksRaw = await ask('Enter marks awarded (0-100): ');
   const marks = parseInt(marksRaw, 10);
   if (isNaN(marks) || marks < 0 || marks > 100) {
@@ -199,15 +197,69 @@ async function evaluateDissertation() {
     all[di].evaluationResult = result;
     all[di].marks = marks;
     all[di].evaluationRemarks = remarks || 'Evaluated by PG Guide.';
+    all[di].universityResult = Storage.deriveUniversityResult(all[di]);
     Storage.saveDissertations(all);
 
     console.log('\n' + '='.repeat(55));
     console.log(` [✓] DISSERTATION EVALUATED`);
-    console.log(` Student : ${sel.studentName}`);
-    console.log(` Topic   : "${sel.topicTitle}"`);
-    console.log(` Marks   : ${marks}/100`);
-    console.log(` Result  : [ ${result.toUpperCase()} ]`);
+    console.log(` Student       : ${sel.studentName}`);
+    console.log(` Topic         : "${sel.topicTitle}"`);
+    console.log(` Marks         : ${marks}/100`);
+    console.log(` Result        : [ ${result.toUpperCase()} ]`);
+    console.log(` Univ. Result  : ${result === 'Approved' ? 'Eligible' : 'Withheld'}`);
     console.log('='.repeat(55));
+  }
+  await pause();
+}
+
+// ── 6. Record Publication ─────────────────────────────────────────────────────
+async function recordPublication() {
+  printSubHeader('RECORD PUBLICATION');
+  const guide = await selectGuide();
+  if (!guide) return;
+
+  const approved = Storage.getDissertationsByGuideId(guide.id).filter(
+    (d) => d.evaluationResult === 'Approved' || d.evaluationStatus === 'Approved'
+  );
+
+  if (approved.length === 0) {
+    console.log(`No approved dissertations under ${guide.name} for publication recording.`);
+    await pause();
+    return;
+  }
+
+  approved.forEach((d, i) => {
+    const pub = d.publication && d.publication.published;
+    console.log(` ${i + 1}. [${d.id}] "${d.topicTitle}" by ${d.studentName}${pub ? ' [Published]' : ''}`);
+  });
+  console.log(` ${approved.length + 1}. Cancel`);
+  const n = parseInt(await ask(`Enter choice (1-${approved.length + 1}): `), 10);
+  if (n < 1 || n > approved.length) return;
+
+  const sel = approved[n - 1];
+  console.log('\n 1. Yes — record publication\n 2. No — mark as not published');
+  const pub = await ask('Enter choice (1-2): ');
+
+  const all = Storage.getDissertations();
+  const di = all.findIndex((d) => d.id === sel.id);
+  if (di === -1) return;
+
+  if (pub === '1') {
+    const pubTitle = await ask('Publication Title: ');
+    const journal = await ask('Journal / Conference Name: ');
+    const year = await ask('Publication Year: ');
+    all[di].publication = {
+      published: true,
+      title: pubTitle.trim() || sel.topicTitle,
+      journal: journal.trim() || 'Unknown',
+      year: year.trim() || new Date().getFullYear().toString()
+    };
+    Storage.saveDissertations(all);
+    console.log(`\n[✓] Publication recorded for "${sel.topicTitle}".`);
+  } else {
+    all[di].publication = { published: false, title: null, journal: null, year: null };
+    Storage.saveDissertations(all);
+    console.log('\n[✓] Marked as not published.');
   }
   await pause();
 }
@@ -222,19 +274,21 @@ async function guideMenu() {
     console.log('3. Reject Topic');
     console.log('4. View Student Progress');
     console.log('5. Evaluate Dissertation');
-    console.log('6. Back');
+    console.log('6. Record Publication');
+    console.log('7. Back');
     printDivider('-', 30);
 
-    const choice = await ask('Enter choice (1-6): ');
+    const choice = await ask('Enter choice (1-7): ');
     switch (choice) {
       case '1': await viewMyStudents(); break;
       case '2': await approveTopic(); break;
       case '3': await rejectTopic(); break;
       case '4': await viewStudentProgress(); break;
       case '5': await evaluateDissertation(); break;
-      case '6': running = false; break;
+      case '6': await recordPublication(); break;
+      case '7': running = false; break;
       default:
-        console.log('\n[!] Invalid choice. Enter 1-6.');
+        console.log('\n[!] Invalid choice. Enter 1-7.');
         await pause();
     }
   }

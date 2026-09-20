@@ -1,13 +1,10 @@
 const Storage = require('../storage');
 const { ask, pause, printHeader, printSubHeader, printDivider } = require('../utils');
 
-// ── Helper: pick a student from list ─────────────────────────────────────────
+// ── Helper: pick a student ────────────────────────────────────────────────────
 async function selectStudent() {
   const students = Storage.getStudents();
-  if (students.length === 0) {
-    console.log('\n[!] No students registered in the system.');
-    return null;
-  }
+  if (students.length === 0) { console.log('\n[!] No students registered.'); return null; }
   console.log('\nSelect Student Profile:');
   printDivider('-', 45);
   students.forEach((s, i) => console.log(` ${i + 1}. [${s.id}] ${s.name} (${s.department})`));
@@ -21,16 +18,13 @@ async function selectStudent() {
 async function viewAvailableTopics() {
   printSubHeader('AVAILABLE DISSERTATION TOPICS');
   const topics = Storage.getAvailableTopics();
-  if (topics.length === 0) {
-    console.log('No available topics found in the departmental pool.');
-    await pause();
-    return;
-  }
+  if (topics.length === 0) { console.log('No available topics.'); await pause(); return; }
   console.log(`Found ${topics.length} available topic(s):\n`);
   topics.forEach((t) => {
     console.log(`[${t.id}] ${t.title}`);
     console.log(`  • Department : ${t.department}`);
     console.log(`  • Domain     : ${t.domain}`);
+    console.log(`  • Category   : ${t.category || '-'}`);
     console.log(`  • Description: ${t.description}`);
     console.log(`  • Status     : ${t.status}`);
     printDivider('-', 55);
@@ -41,19 +35,16 @@ async function viewAvailableTopics() {
 // ── 2. Propose Dissertation Topic ─────────────────────────────────────────────
 async function proposeTopic() {
   printSubHeader('PROPOSE DISSERTATION TOPIC');
-
   const student = await selectStudent();
   if (!student) return;
 
-  // Prevent duplicate dissertation for same student
   const existing = Storage.getDissertationByStudentId(student.id);
   if (existing) {
     const ts = existing.topicStatus || existing.status || '';
     if (ts !== 'Rejected') {
-      console.log(`\n[!] ${student.name} already has an active dissertation proposal:`);
+      console.log(`\n[!] ${student.name} already has an active dissertation:`);
       console.log(`    Title  : "${existing.topicTitle}"`);
       console.log(`    Status : ${ts}`);
-      console.log('    Cannot propose another topic while one is active.');
       await pause();
       return;
     }
@@ -65,39 +56,35 @@ async function proposeTopic() {
   console.log(' 3. Cancel');
   const method = await ask('Enter choice (1-3): ');
 
-  let topicTitle = '', department = student.department, domain = '', description = '', selectedTopicId = null;
+  let topicTitle = '', department = student.department, domain = '', category = '', description = '', selectedTopicId = null;
 
   if (method === '1') {
     const avail = Storage.getAvailableTopics();
-    if (avail.length === 0) {
-      console.log('\n[!] No available topics. Propose a custom topic instead.');
-      await pause();
-      return;
-    }
+    if (avail.length === 0) { console.log('\n[!] No available topics. Try a custom topic.'); await pause(); return; }
     avail.forEach((t, i) => console.log(` ${i + 1}. [${t.id}] ${t.title} (${t.domain})`));
     const n = parseInt(await ask(`Select topic (1-${avail.length}): `), 10);
     if (n < 1 || n > avail.length) { console.log('Invalid selection.'); await pause(); return; }
     const ch = avail[n - 1];
     topicTitle = ch.title; department = ch.department; domain = ch.domain;
-    description = ch.description; selectedTopicId = ch.id;
+    category = ch.category || ''; description = ch.description; selectedTopicId = ch.id;
   } else if (method === '2') {
     topicTitle = await ask('\nEnter Topic Title: ');
     if (!topicTitle) { console.log('Title cannot be empty.'); await pause(); return; }
     if (Storage.isTopicTitleDuplicate(topicTitle)) {
       console.log('\n' + '!'.repeat(55));
       console.log(' [!] TOPIC DUPLICATION PREVENTED');
-      console.log(' A topic with this title already exists in the system.');
+      console.log(' A topic with this title already exists.');
       console.log('!'.repeat(55));
       await pause();
       return;
     }
-    domain = await ask('Enter Research Domain: ');
-    description = await ask('Enter Brief Description / Abstract: ');
+    domain = await ask('Research Domain: ');
+    category = await ask('Category (e.g. Clinical, Pharmacognosy, Basic Science): ');
+    description = await ask('Brief Description / Abstract: ');
   } else {
     return;
   }
 
-  // Guide info
   let guideId = student.guideId || null;
   let guideName = 'Unassigned';
   if (guideId) {
@@ -105,20 +92,20 @@ async function proposeTopic() {
     if (g) guideName = g.name;
   }
 
-  const dissertations = Storage.getDissertations();
   const id = Storage.generateDissertationId();
-
   const rec = {
     id,
     studentId: student.id,
     studentName: student.name,
-    guideId: guideId,
-    guideName: guideName,
+    guideId,
+    guideName,
     topicTitle: topicTitle.trim(),
     department: department || 'General',
     domain: domain || 'General',
+    category: category || 'General',
     description: description || 'Research proposal submitted by PG student.',
     topicStatus: 'Pending',
+    status: 'Pending Review',
     progress: 0,
     submissionStatus: 'Not Submitted',
     submissionDate: null,
@@ -126,13 +113,13 @@ async function proposeTopic() {
     marks: null,
     evaluationRemarks: null,
     evaluationResult: null,
+    universityResult: 'Pending',
+    publication: { published: false, title: null, journal: null, year: null },
     proposedDate: new Date().toISOString().split('T')[0],
     reviewComments: 'Proposal submitted. Awaiting guide review.'
   };
 
-  // Keep old `status` field for backward compat with Commit 2 tests
-  rec.status = 'Pending Review';
-
+  const dissertations = Storage.getDissertations();
   dissertations.push(rec);
   Storage.saveDissertations(dissertations);
 
@@ -145,11 +132,12 @@ async function proposeTopic() {
   console.log('\n' + '='.repeat(55));
   console.log(' [✓] DISSERTATION TOPIC PROPOSED SUCCESSFULLY!');
   console.log('='.repeat(55));
-  console.log(` ID      : ${rec.id}`);
-  console.log(` Student : ${rec.studentName}`);
-  console.log(` Guide   : ${rec.guideName}`);
-  console.log(` Topic   : ${rec.topicTitle}`);
-  console.log(` Status  : ${rec.topicStatus}`);
+  console.log(` ID       : ${rec.id}`);
+  console.log(` Student  : ${rec.studentName}`);
+  console.log(` Guide    : ${rec.guideName}`);
+  console.log(` Topic    : ${rec.topicTitle}`);
+  console.log(` Category : ${rec.category}`);
+  console.log(` Status   : ${rec.topicStatus}`);
   console.log('='.repeat(55));
   await pause();
 }
@@ -167,6 +155,8 @@ async function viewMyDissertation() {
     return;
   }
 
+  const uResult = Storage.deriveUniversityResult(d);
+
   console.log('\n' + '='.repeat(55));
   console.log(` DISSERTATION: ${d.id}`);
   console.log('='.repeat(55));
@@ -174,6 +164,7 @@ async function viewMyDissertation() {
   console.log(` PG Guide         : ${d.guideName || 'Not Assigned'}`);
   console.log(` Department       : ${d.department}`);
   console.log(` Domain           : ${d.domain}`);
+  console.log(` Category         : ${d.category || '-'}`);
   console.log(` Topic            : ${d.topicTitle}`);
   console.log(` Topic Status     : [ ${d.topicStatus || d.status || 'Pending'} ]`);
   console.log(` Progress         : ${d.progress !== undefined ? d.progress : 0}%`);
@@ -181,8 +172,15 @@ async function viewMyDissertation() {
   console.log(` Evaluation       : ${d.evaluationStatus || 'Pending'}`);
   if (d.evaluationResult) {
     console.log(` Evaluation Result: [ ${d.evaluationResult.toUpperCase()} ]`);
-    console.log(` Marks            : ${d.marks !== null ? d.marks : '-'}`);
+    console.log(` Marks            : ${d.marks !== null ? d.marks + '/100' : '-'}`);
     console.log(` Evaluator Remarks: ${d.evaluationRemarks || '-'}`);
+  }
+  console.log(` University Result: [ ${uResult} ]`);
+  if (d.publication && d.publication.published) {
+    console.log(` Publication      : "${d.publication.title}"`);
+    console.log(`                    ${d.publication.journal} (${d.publication.year})`);
+  } else {
+    console.log(` Publication      : Not published`);
   }
   console.log(` Guide Remarks    : ${d.reviewComments || 'None'}`);
   console.log(` Proposed Date    : ${d.proposedDate}`);
@@ -243,33 +241,29 @@ async function submitDissertation() {
 
   const d = dissertations[di];
 
-  // Must have a guide assigned
   if (!d.guideId) {
-    console.log('\n[!] Cannot submit: No guide assigned to this dissertation.');
-    console.log('    Ask Admin to assign a guide (Admin Menu → Option 5).');
+    console.log('\n[!] Cannot submit: No guide assigned. Ask Admin to assign a guide.');
     await pause();
     return;
   }
 
-  // Topic must be approved
   const ts = d.topicStatus || d.status || '';
   if (ts !== 'Approved') {
-    console.log(`\n[!] Cannot submit: Topic is not yet approved. Current status: ${ts}`);
+    console.log(`\n[!] Cannot submit: Topic not yet approved. Current status: ${ts}`);
     await pause();
     return;
   }
 
-  // Already submitted?
   if (d.submissionStatus === 'Submitted') {
-    console.log(`\n[!] Dissertation already submitted on ${d.submissionDate}.`);
+    console.log(`\n[!] Already submitted on ${d.submissionDate}.`);
     await pause();
     return;
   }
 
-  console.log(`\nYou are about to submit the dissertation:`);
-  console.log(`  Topic  : "${d.topicTitle}"`);
-  console.log(`  Guide  : ${d.guideName}`);
-  console.log(`  Progress: ${d.progress !== undefined ? d.progress : 0}%`);
+  console.log(`\nSubmitting dissertation:`);
+  console.log(`  Topic    : "${d.topicTitle}"`);
+  console.log(`  Guide    : ${d.guideName}`);
+  console.log(`  Progress : ${d.progress !== undefined ? d.progress : 0}%`);
   const confirm = await ask('Confirm submission? (yes/no): ');
   if (confirm.toLowerCase() !== 'yes' && confirm.toLowerCase() !== 'y') {
     console.log('Submission cancelled.');

@@ -1,136 +1,95 @@
 # PG Dissertation Management System
-> **Academic Research & Dissertation Management Terminal Application**
 
-A lightweight, robust, and interactive Terminal / CLI application developed for post-graduate dissertation lifecycle management based on the Ministry of AYUSH problem statement.
+A terminal-based Node.js CLI application for managing the complete lifecycle of PG (Post-Graduate) dissertations — from topic proposal to final evaluation and publication.
 
----
+## Getting Started
 
-## 📌 Project Overview
+### Requirements
+- Node.js (v14 or above)
 
-PG dissertation is a mandatory requirement for the fulfillment of a Post-Graduate degree. During the 1st year of post-graduation, students select a PG dissertation topic and carry out research under the supervision of an allocated PG guide, submitting their dissertation during the final year for evaluation.
-
-This terminal application provides an intuitive command-line interface for **Students**, **Guides**, and **Administrators** to manage research topics, prevent duplicate research, assign supervisors, and process dissertation approvals.
-
-### Problem Statement & Domain Focus
-- **Year:** 2023
-- **Domain:** Smart Education
-- **Category:** Software / Terminal Application
-- **Organisation:** Ministry of AYUSH
-
----
-
-## 💻 Tech Stack & Architecture
-
-- **Runtime:** Node.js (v18+)
-- **Interface:** Terminal / CLI (Standard I/O, `readline`)
-- **Data Persistence:** Local JSON storage (`data/`)
-- **External Dependencies:** Zero (pure Node.js standard libraries for maximum portability and speed)
-
----
-
-## 📂 Project Structure
-
-```text
-pg-dissertation-management-system/
-├── data/
-│   ├── users.json             # Student, Guide, and Admin records
-│   ├── topics.json            # Departmental thrust area research topics
-│   └── dissertations.json     # Proposed and active dissertation records
-├── src/
-│   ├── menus/
-│   │   ├── studentMenu.js     # Student actions (View topics, Propose, View dissertation)
-│   │   ├── guideMenu.js       # Guide actions (Pending topics, My students, Approve/Reject)
-│   │   └── adminMenu.js       # Admin actions (Add topic, View lists, Assign guide)
-│   ├── storage.js             # Data access layer & duplicate prevention logic
-│   └── utils.js               # CLI prompt helpers and formatting utilities
-├── index.js                   # Application entry point & main menu
-├── package.json               # Project manifest and start script
-├── .gitignore                 # Git ignore rules
-└── README.md                  # Comprehensive project documentation
-```
-
----
-
-## 🚀 How to Run the Application
-
-### Prerequisites
-- Node.js installed (`node -v` >= 18.x)
-
-### Running the App
-From the project root directory:
-
+### Install & Run
 ```bash
+npm install
 npm start
 ```
-*or alternatively:*
-```bash
-node index.js
+
+The application runs entirely in your terminal. No browser or internet connection needed.
+
+---
+
+## How It Works
+
+Data is stored locally in JSON files inside the `data/` directory:
+- `data/users.json` — students, guides, admin
+- `data/topics.json` — departmental research topics
+- `data/dissertations.json` — dissertation records
+
+No database server is required. All changes persist automatically.
+
+---
+
+## Dissertation Workflow
+
+```
+Admin adds topic → Admin assigns guide → Student proposes topic
+→ Guide approves → Student updates progress → Student submits
+→ Guide evaluates → Publication recorded → University result set
 ```
 
 ---
 
-## 🖥️ Terminal Menu Walkthrough
+## Features
 
-### Main Menu
-```text
-========================================
- PG DISSERTATION MANAGEMENT SYSTEM
-========================================
+### Student Menu
+1. **View Available Topics** — Browse departmental research topics
+2. **Propose Dissertation Topic** — Select from existing topics or propose a custom one
+3. **View My Dissertation** — See full record: topic status, progress, evaluation result, university result, and publication
+4. **Update Progress** — Enter current research completion percentage (0–100%)
+5. **Submit Dissertation** — Mark dissertation as submitted (guide must be assigned and topic must be approved)
 
-1. Student
-2. Guide
-3. Admin
-4. Exit
+### Guide Menu
+1. **View My Students** — See all assigned students and their dissertation status
+2. **Approve Topic** — Approve a pending student topic
+3. **Reject Topic** — Reject a pending student topic with reason
+4. **View Student Progress** — See progress bars for all assigned students
+5. **Evaluate Dissertation** — Award marks and set result (Approved / Rejected)
+6. **Record Publication** — Log publication details after dissertation approval
 
-Enter choice:
-```
-
----
-
-### 1. Student Menu
-Accessible by selecting `1` from Main Menu:
-- **1. View Available Topics**: Lists all available departmental research thrust topics.
-- **2. Propose Dissertation Topic**:
-  - Select student profile.
-  - Choose an existing departmental topic OR propose a custom research title.
-  - **Duplicate Prevention**: System automatically checks if the topic title already exists and prevents duplicates.
-  - Select PG Guide to review.
-  - Submits proposal under `Pending Review` status.
-- **3. View My Dissertation**: View student's current dissertation status, assigned guide, and review comments.
-- **4. Back**: Return to Main Menu.
+### Admin Menu
+1. **Add Dissertation Topic** — Create topics in the departmental pool
+2. **View All Topics** — List all registered topics with status
+3. **View Students** — See all students, their guide, and dissertation summary
+4. **View Guides** — See all guides and their student load
+5. **Assign Guide** — Assign a PG guide to a student (max 5 students per guide)
+6. **View Dissertation Status** — Full overview of all dissertations with university result
+7. **Search Dissertations** — Search by student name, topic, category, domain, or department
+8. **Record Publication** — Record publication details for approved dissertations
 
 ---
 
-### 2. Guide Menu
-Accessible by selecting `2` from Main Menu:
-- **1. View Pending Topics**: Displays all dissertation proposals currently awaiting review.
-- **2. View My Students**: Displays students assigned to the guide and their research progress.
-- **3. Approve Topic**: Select pending dissertation proposal and record approval remarks.
-- **4. Reject Topic**: Reject proposal with revision feedback.
-- **5. Back**: Return to Main Menu.
+## University Result Status
+
+| Evaluation State | University Result |
+|---|---|
+| Not yet evaluated | Pending |
+| Approved | Eligible |
+| Rejected | Withheld |
 
 ---
 
-### 3. Admin Menu
-Accessible by selecting `3` from Main Menu:
-- **1. Add Dissertation Topic**: Add new departmental research thrust topic (includes instant duplicate detection).
-- **2. View All Topics**: View comprehensive list of departmental research topics.
-- **3. View Students**: View all registered PG scholars and their research status.
-- **4. View Guides**: View faculty supervisors and current student-guide ratio load.
-- **5. Assign Guide**: Assign or re-allocate a PG guide to a student.
-- **6. Back**: Return to Main Menu.
+## Key Rules
+- A student cannot submit without an assigned guide
+- A topic must be approved before submission
+- A guide can only evaluate submitted dissertations
+- A guide cannot be assigned more than 5 students
+- Duplicate topic titles are automatically prevented
 
 ---
 
-## 🛡️ Key Features Implemented
-
-1. **Duplicate Topic Prevention**: Strict case-insensitive title validation preventing identical research topics across both registered topics and student proposals.
-2. **Role-Based Workflows**: Tailored terminal interfaces for Students, Guides, and Administrators.
-3. **JSON Data Persistence**: Changes to users, topics, and dissertations persist immediately to local JSON files.
-4. **Student-Guide Load Visibility**: Tracks guide capacity and allocated scholars to support balanced student-guide ratios.
-5. **Clean Terminal UX**: Structured tables, banners, dividers, and status indicators designed for ease of demonstration to faculty.
-
----
-
-## 📄 License
-This project is licensed under the ISC License.
+## Commit History
+| Commit | Description |
+|---|---|
+| `5e83afb` | Initialize PG dissertation management system |
+| `d7eadd2` | Convert system to terminal application |
+| `6a45ba6` | Add core dissertation workflow |
+| `latest`  | Complete dissertation management features |

@@ -5,7 +5,7 @@
     "department": "Ayurveda Research",
     "domain": "Psychopharmacology",
     "description": "Randomized controlled study investigating the efficacy of Withania somnifera standardized extract.",
-    "status": "Available",
+    "status": "Reserved",
     "addedBy": "Admin",
     "createdAt": "2026-09-20"
   },
@@ -35,6 +35,17 @@
     "department": "Herbal Pharmacology",
     "domain": "Formulation Development",
     "description": "Quality control, stability studies and hepatoprotective evaluation of traditional herbal compound.",
+    "status": "Available",
+    "addedBy": "Admin",
+    "createdAt": "2026-09-20"
+  },
+  {
+    "id": "TOP005",
+    "title": "Herbal Antibacterial Formulation Research",
+    "department": "Herbal Pharmacology",
+    "domain": "Microbiology",
+    "category": "Pharmacognosy",
+    "description": "Study of Tulsi and Neem extracts for antibacterial properties.",
     "status": "Available",
     "addedBy": "Admin",
     "createdAt": "2026-09-20"
