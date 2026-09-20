@@ -38,6 +38,15 @@ function writeJson(filePath, data) {
   }
 }
 
+// Derive the university result from evaluation state
+function deriveUniversityResult(d) {
+  const evalResult = (d.evaluationResult || '').toLowerCase();
+  const evalStatus = (d.evaluationStatus || '').toLowerCase();
+  if (evalResult === 'approved' || evalStatus === 'approved') return 'Eligible';
+  if (evalResult === 'rejected' || evalStatus === 'rejected') return 'Withheld';
+  return 'Pending';
+}
+
 const Storage = {
   // Users
   getUsers: () => readJson(USERS_FILE),
@@ -60,23 +69,38 @@ const Storage = {
   getDissertationById: (id) =>
     readJson(DISSERTATIONS_FILE).find((d) => d.id === id),
 
-  // Pending = topicStatus is Pending (or old "Pending Review" for backward compat)
+  // Pending dissertations (topicStatus = Pending)
   getPendingDissertations: () =>
     readJson(DISSERTATIONS_FILE).filter(
       (d) => d.topicStatus === 'Pending' || d.status === 'Pending Review'
     ),
 
-  // Dissertations assigned to a specific guide
+  // Dissertations by guide
   getDissertationsByGuideId: (guideId) =>
     readJson(DISSERTATIONS_FILE).filter((d) => d.guideId === guideId),
 
-  // Count how many students a guide currently has
+  // Count students assigned to a guide
   getStudentCountForGuide: (guideId) =>
     readJson(USERS_FILE).filter(
       (u) => u.role === 'student' && u.guideId === guideId
     ).length,
 
-  // Duplicate check — title must not exist in topics or dissertations
+  // Search dissertations by student name or topic title (case-insensitive)
+  searchDissertations: (query) => {
+    if (!query) return [];
+    const q = query.trim().toLowerCase();
+    return readJson(DISSERTATIONS_FILE).filter((d) => {
+      return (
+        (d.studentName && d.studentName.toLowerCase().includes(q)) ||
+        (d.topicTitle && d.topicTitle.toLowerCase().includes(q)) ||
+        (d.category && d.category.toLowerCase().includes(q)) ||
+        (d.domain && d.domain.toLowerCase().includes(q)) ||
+        (d.department && d.department.toLowerCase().includes(q))
+      );
+    });
+  },
+
+  // Duplicate title check
   isTopicTitleDuplicate: (title) => {
     if (!title) return false;
     const normalized = title.trim().toLowerCase();
@@ -87,6 +111,9 @@ const Storage = {
       (d) => d.topicTitle && d.topicTitle.trim().toLowerCase() === normalized
     );
   },
+
+  // University result helper
+  deriveUniversityResult,
 
   // ID generators
   generateTopicId: () => {

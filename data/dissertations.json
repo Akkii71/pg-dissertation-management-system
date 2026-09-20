@@ -8,6 +8,7 @@
     "topicTitle": "Clinical Evaluation of Ashwagandha in Stress Management",
     "department": "Ayurveda Research",
     "domain": "Psychopharmacology",
+    "category": "Clinical Research",
     "description": "Standardized RCT study on adult subjects measuring serum cortisol levels and HAM-A scores.",
     "topicStatus": "Approved",
     "status": "Approved",
@@ -18,6 +19,13 @@
     "marks": null,
     "evaluationRemarks": null,
     "evaluationResult": null,
+    "universityResult": "Pending",
+    "publication": {
+      "published": false,
+      "title": null,
+      "journal": null,
+      "year": null
+    },
     "proposedDate": "2026-09-18",
     "reviewComments": "Topic aligned with department research thrust area. Approved by Departmental Committee."
   }
