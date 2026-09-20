@@ -9,7 +9,15 @@
     "department": "Ayurveda Research",
     "domain": "Psychopharmacology",
     "description": "Standardized RCT study on adult subjects measuring serum cortisol levels and HAM-A scores.",
+    "topicStatus": "Approved",
     "status": "Approved",
+    "progress": 0,
+    "submissionStatus": "Not Submitted",
+    "submissionDate": null,
+    "evaluationStatus": "Pending",
+    "marks": null,
+    "evaluationRemarks": null,
+    "evaluationResult": null,
     "proposedDate": "2026-09-18",
     "reviewComments": "Topic aligned with department research thrust area. Approved by Departmental Committee."
   }
